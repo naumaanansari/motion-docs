@@ -1,18 +1,22 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import { cn } from "@/lib/utils"
-import {  ChevronsLeft, MenuIcon } from "lucide-react"
+import {  ChevronsLeft, MenuIcon, PlusCircle, Search, Settings } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { ElementRef, useEffect, useRef, useState } from "react"
 import {useMediaQuery} from "usehooks-ts"
 import { UserItem } from "./user-item"
+import { useMutation, useQuery } from "convex/react"
+import { api } from "@/convex/_generated/api"
+import { Item } from "./item"
+import { toast } from "sonner"
 
 
 export const Navigation = () => {
     const pathname = usePathname();
     const isMobile = useMediaQuery("(max-width: 768px)");
-
+    const documents = useQuery(api.documents.get);
+    const create = useMutation(api.documents.create); // specify the API function for mutation
 
     const isResizingRef = useRef(false);
     const sidebarRef = useRef<ElementRef <"aside">>(null);
@@ -27,6 +31,7 @@ export const Navigation = () => {
         }else{
             resetWidth();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isMobile]);
 
     useEffect(() => {
@@ -96,9 +101,17 @@ export const Navigation = () => {
             navbarRef.current.style.setProperty("width", "100%");
             navbarRef.current.style.setProperty("left", "0");
             setTimeout(() => setResetting(false), 300);
-        }
-    }
-    
+        };
+    };
+    const handleCreate = () => {
+        const promise = create({title: "Untitled"});
+
+        toast.promise(promise,{
+            loading: "Creating A New Note...",
+            success: "New Note Created :)",
+            error:"Failed To Create A New Note :|"
+        });
+    };
     
 
   return (<>
@@ -114,9 +127,27 @@ export const Navigation = () => {
         </div>
         <div className="">
             <UserItem/>
+            <Item
+                label="Search"
+                icon={Search}
+                isSearch
+                onClick={()=>{}}
+            />
+            <Item
+                label="Settings"
+                icon={Settings}
+                onClick={()=>{}}
+            />  
+            <Item 
+                onClick={handleCreate} 
+                label="New Page" 
+                icon={PlusCircle}
+            />
         </div>
         <div className="mt-4">
-            <p className="">Documents</p>
+            {documents?.map((document)=>(
+                <p key={document._id}>{document.title}</p> 
+            ))}
         </div>
         <div 
         onMouseDown={handleMouseDown}
